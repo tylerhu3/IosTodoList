@@ -30,6 +30,7 @@ struct NewItemView: View {
                     viewModel.title.isEmpty ?
                     print("Title cannot be empty") :
                     viewModel.title.append("\n")
+                    viewModel.save()
                 }).padding()
             }
         }

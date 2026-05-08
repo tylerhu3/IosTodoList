@@ -8,29 +8,61 @@
 import SwiftUI
 
 struct LoginView: View {
-    @State var email = ""
-    @State var password = ""
+    @StateObject var viewModel = LoginViewViewModel()
+
     var body: some View {
         NavigationView {
-            VStack{
+            VStack {
                 HeaderView(title: "To Do List", subtitle: "Get things done", angle: -15, background: .orange)
                 
                 Form {
-                    TextField("Email Address", text: $email)
+                    if !viewModel.errorMessage.isEmpty {
+                        Text(viewModel.errorMessage)
+                            .foregroundColor(.red)
+                            .font(.footnote)
+                    }
+
+                    TextField("Email Address", text: $viewModel.email)
                         .textFieldStyle(DefaultTextFieldStyle())
-                    SecureField("Password", text: $password).textFieldStyle(DefaultTextFieldStyle())
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+
+                    SecureField("Password", text: $viewModel.password)
+                        .textFieldStyle(DefaultTextFieldStyle())
+                    
+                    Button {
+                        viewModel.login()
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .foregroundColor(.blue)
+                            
+                            // Switch between Text and Loading Indicator
+                            if viewModel.isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            } else {
+                                Text("Login")
+                                    .foregroundColor(.white)
+                                    .bold()
+                            }
+                        }
+                    }
+                    .frame(height: 44) // Set height so button doesn't shrink when loading
+                    .padding(.vertical, 10)
+                    .disabled(viewModel.isLoading) // Prevent double-tapping
                 }
+                
                 Spacer()
+                
                 VStack {
                     Text("New around here?")
                     NavigationLink("Create an account", destination: RegisterView())
                 }
                 .padding(.bottom, 50)
-                Spacer()
             }
         }
     }
-    
 }
 
 #Preview {

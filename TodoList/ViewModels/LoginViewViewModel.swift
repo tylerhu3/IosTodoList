@@ -11,35 +11,40 @@ internal import Combine
 
 class LoginViewViewModel: ObservableObject {
     @Published var email = ""
-    @Published var password: String = ""
-    @Published var errorMessage: String = ""
-    
-    init() {
-        
-    }
-    
+    @Published var password = ""
+    @Published var errorMessage = ""
+    @Published var isLoading = false // Track loading state
+
     func login() {
-        guard validate() else {
-            return
-        }
+        guard validate() else { return }
         
-        Auth.auth().signIn(withEmail: email, link: password)
+        isLoading = true
+        errorMessage = ""
+        
+        Auth.auth().signIn(withEmail: email, password: password) { [weak self] _, error in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                
+                if let error = error {
+                    // This will catch "Wrong Password", "User Not Found", etc.
+                    self?.errorMessage = error.localizedDescription
+                }
+            }
+        }
     }
     
     func validate() -> Bool {
         errorMessage = ""
+        if email.trimmingCharacters(in: .whitespaces).isEmpty ||
+           password.trimmingCharacters(in: .whitespaces).isEmpty {
+            errorMessage = "Please fill in all fields."
+            return false
+        }
         
-        guard !email.trimmingCharacters(in: .whitespaces).isEmpty,
-              !password.trimmingCharacters(in: .whitespaces).isEmpty else {
-            errorMessage = "Email and password are required"
+        if !email.contains("@") || !email.contains(".") {
+            errorMessage = "Please enter a valid email."
             return false
         }
-              
-        guard email.contains("@") && email.contains(".") else {
-            errorMessage = "Valid email required"
-            return false
-        }
-
         return true
     }
 }
